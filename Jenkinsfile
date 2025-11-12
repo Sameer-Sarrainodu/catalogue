@@ -95,8 +95,8 @@ pipeline {
                             echo "🔐 Logging in to AWS ECR..."
                             aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
 
-                            echo "🐳 Building Docker image for ${PROJECT}/${COMPONENT}:${appVersion}..."
-                            docker build -t ${PROJECT}/${COMPONENT}:${appVersion} .
+                            echo "🐳 Building single-architecture (amd64) Docker image for ${PROJECT}/${COMPONENT}:${appVersion}..."
+                            docker build --platform linux/amd64 -t ${PROJECT}/${COMPONENT}:${appVersion} .
 
                             echo "🏷️  Tagging image for ECR..."
                             docker tag ${PROJECT}/${COMPONENT}:${appVersion} ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
