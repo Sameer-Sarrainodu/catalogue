@@ -56,37 +56,37 @@ pipeline {
         //         }
         //     }
         // }
-        // stage('check dependabot'){
-        //     environment{
-        //         GITHUB_TOKEN = credentials('github-token')
-        //     }
-        //     steps{
-        //         script{
-        //             def response = sh(
-        //                 script: """
-        //                         curl -s -L \
-        //                         -H "Accept: application/vnd.github+json" \
-        //                         -H "Authorization: Bearer ${}" \
-        //                         https://api.github.com/repos/Sameer-Sarrainodu/catalogue/dependabot/alerts
-        //                 """,
-        //                 returnStdout: true
-        //             ).trim()
+        stage('check dependabot'){
+            environment{
+                GITHUB_TOKEN = credentials('github-token')
+            }
+            steps{
+                script{
+                    def response = sh(
+                        script: """
+                                curl -s -L \
+                                -H "Accept: application/vnd.github+json" \
+                                -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                                https://api.github.com/repos/Sameer-Sarrainodu/catalogue/dependabot/alerts
+                        """,
+                        returnStdout: true
+                    ).trim()
 
-        //             def json = readJSON text: response
-        //             def criticalOrHigh = json.findAll { alert ->
+                    def json = readJSON text: response
+                    def criticalOrHigh = json.findAll { alert ->
 
-        //                 def severity = alert?.security_advisory?.severity?.toLowerCase()
-        //                 def state = alert?.state?.toLowerCase()
-        //                 return (state == "open" && (severity == "critical" || severity == "high"))
-        //             }
-        //             if (criticalOrHigh.size() > 0) {
-        //                 error "❌ Found ${criticalOrHigh.size()} HIGH/CRITICAL Dependabot alerts. Failing pipeline!"
-        //             } else {
-        //                 echo "✅ No HIGH/CRITICAL Dependabot alerts found."
-        //             }
-        //         }
-        //     }
-        // }
+                        def severity = alert?.security_advisory?.severity?.toLowerCase()
+                        def state = alert?.state?.toLowerCase()
+                        return (state == "open" && (severity == "critical" || severity == "high"))
+                    }
+                    if (criticalOrHigh.size() > 0) {
+                        error "❌ Found ${criticalOrHigh.size()} HIGH/CRITICAL Dependabot alerts. Failing pipeline!"
+                    } else {
+                        echo "✅ No HIGH/CRITICAL Dependabot alerts found."
+                    }
+                }
+            }
+        }
         stage('Docker Build') {
             steps {
                 script {
