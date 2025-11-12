@@ -36,26 +36,26 @@ pipeline {
                 }
             }
         }
-        // stage('sonar scan'){
-        //     environment{
-        //         scannerHome = tool 'sonar-7.2'
-        //     }
-        //     steps{
-        //         script{
-        //             withSonarQubeEnv(installationName: 'sonar-7.2'){
-        //                 sh "${scannerHome}/bin/sonar-scanner" 
-        //             }
+        stage('sonar scan'){
+            environment{
+                scannerHome = tool 'sonar-7.2'
+            }
+            steps{
+                script{
+                    withSonarQubeEnv(installationName: 'sonar-7.2'){
+                        sh "${scannerHome}/bin/sonar-scanner" 
+                    }
                        
-        //         }
-        //     }
-        // }
-        // stage('quality gate'){
-        //     steps{
-        //         timeout(time: 1, unit: 'HOURS'){
-        //             waitForQualityGate abortPipeline: false
-        //         }
-        //     }
-        // }
+                }
+            }
+        }
+        stage('quality gate'){
+            steps{
+                timeout(time: 1, unit: 'HOURS'){
+                    waitForQualityGate abortPipeline: false
+                }
+            }
+        }
         // stage('check dependabot'){
         //     environment{
         //         GITHUB_TOKEN = credentials('github-token')
@@ -102,29 +102,29 @@ pipeline {
                 }
             }
         }
-        stage('Check Scan Results') {
-            steps {
-                script {
-                    withAWS(credentials: 'aws-creds', region: REGION) {
-                        sh """
-                            echo "🔐 Logging in to AWS ECR..."
-                            aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
+        // stage('Check Scan Results') {
+        //     steps {
+        //         script {
+        //             withAWS(credentials: 'aws-creds', region: REGION) {
+        //                 sh """
+        //                     echo "🔐 Logging in to AWS ECR..."
+        //                     aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
 
-                            echo "🐳 Building Docker image (forcing legacy builder and single-arch)..."
-                            export DOCKER_BUILDKIT=0
-                            export DOCKER_DEFAULT_PLATFORM=linux/amd64
-                            docker build -t ${PROJECT}/${COMPONENT}:${appVersion} .
+        //                     echo "🐳 Building Docker image (forcing legacy builder and single-arch)..."
+        //                     export DOCKER_BUILDKIT=0
+        //                     export DOCKER_DEFAULT_PLATFORM=linux/amd64
+        //                     docker build -t ${PROJECT}/${COMPONENT}:${appVersion} .
 
-                            echo "🏷️  Tagging for ECR..."
-                            docker tag ${PROJECT}/${COMPONENT}:${appVersion} ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+        //                     echo "🏷️  Tagging for ECR..."
+        //                     docker tag ${PROJECT}/${COMPONENT}:${appVersion} ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
 
-                            echo "🚀 Pushing image to ECR..."
-                            docker push ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
-                        """
-                    }
-                }
-            }
-        }
+        //                     echo "🚀 Pushing image to ECR..."
+        //                     docker push ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
         stage('Trigger deploy') {
             when{
                 expression { params.deploy }
