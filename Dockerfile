@@ -9,6 +9,7 @@ RUN npm install
 FROM node:20-alpine3.19
 RUN addgroup -S roboshop && \
     adduser -S -D -H -h /opt/server -s /sbin/nologin -G roboshop roboshop
+RUN apk update && apk upgrade
 ENV MONGO=true \
     MONGO_URL=mongodb://mongodb:27017/catalogue
 WORKDIR /opt/server
