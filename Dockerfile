@@ -1,12 +1,12 @@
 # this is even optimized by remove unwanted cache using multi stage build
 
-FROM node:20-alpine3.21 AS builder
+FROM node:20-alpine3.19 AS builder
 WORKDIR /opt/server
 COPY package.json . 
 COPY server.js .
 RUN npm install
 
-FROM node:20-alpine3.21
+FROM node:20-alpine3.19
 RUN addgroup -S roboshop && \
     adduser -S -D -H -h /opt/server -s /sbin/nologin -G roboshop roboshop
 ENV MONGO=true \
