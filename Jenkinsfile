@@ -92,14 +92,19 @@ pipeline {
                 script {
                     withAWS(credentials: 'aws-creds', region: REGION) {
                         sh """
-                            echo "🔐 Logging in to ECR..."
+                            echo "🔐 Logging in to AWS ECR..."
                             aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
 
-                            echo "🐳 Building single-arch Docker image (amd64)..."
-                            docker build --platform linux/amd64 -t ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
+                            echo "🐳 Building Docker image for ${PROJECT}/${COMPONENT}:${appVersion}..."
+                            docker build -t ${PROJECT}/${COMPONENT}:${appVersion} .
+
+                            echo "🏷️  Tagging image for ECR..."
+                            docker tag ${PROJECT}/${COMPONENT}:${appVersion} ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
 
                             echo "🚀 Pushing image to ECR..."
                             docker push ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+
+                            echo "✅ Docker image pushed successfully to ECR!"
                         """
                     }
                 }
