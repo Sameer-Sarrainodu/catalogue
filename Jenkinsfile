@@ -119,7 +119,7 @@ pipeline {
                         // Parse JSON
                         def json = readJSON text: findings
 
-                        def highCritical = json?.imageScanFindings?.findings?.findAll {
+                        def highCritical = json.imageScanFindings.findings.findAll {
                             it?.severity == "HIGH" || it?.severity == "CRITICAL"
                         }
 
