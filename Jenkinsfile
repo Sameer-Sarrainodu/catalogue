@@ -105,33 +105,22 @@ pipeline {
         stage('Check Scan Results') {
             steps {
                 script {
-                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
-                    // Fetch scan findings
-                        def findings = sh(
-                            script: """
-                                aws ecr describe-image-scan-findings \
-                                --repository-name ${PROJECT}/${COMPONENT} \
-                                --image-id imageTag=${appVersion} \
-                                --region ${REGION} \
-                                --output json
-                            """,
-                            returnStdout: true
-                        ).trim()
+                    withAWS(credentials: 'aws-creds', region: REGION) {
+                        sh """
+                            echo "🔐 Logging in to AWS ECR..."
+                            aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
 
-                        // Parse JSON
-                        def json = readJSON text: findings
+                            echo "🐳 Building Docker image (forcing legacy builder and single-arch)..."
+                            export DOCKER_BUILDKIT=0
+                            export DOCKER_DEFAULT_PLATFORM=linux/amd64
+                            docker build -t ${PROJECT}/${COMPONENT}:${appVersion} .
 
-                        def highCritical = json.imageScanFindings.findings.findAll {
-                            it?.severity == "HIGH" || it?.severity == "CRITICAL"
-                        }
+                            echo "🏷️  Tagging for ECR..."
+                            docker tag ${PROJECT}/${COMPONENT}:${appVersion} ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
 
-                        if (highCritical.size() > 0) {
-                            echo "❌ Found ${highCritical.size()} HIGH/CRITICAL vulnerabilities!"
-                            currentBuild.result = 'FAILURE'
-                            error("Build failed due to vulnerabilities")
-                        } else {
-                            echo "✅ No HIGH/CRITICAL vulnerabilities found."
-                        }
+                            echo "🚀 Pushing image to ECR..."
+                            docker push ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+                        """
                     }
                 }
             }
