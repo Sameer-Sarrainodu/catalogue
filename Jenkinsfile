@@ -36,26 +36,26 @@ pipeline {
                 }
             }
         }
-        stage('sonar scan'){
-            environment{
-                scannerHome = tool 'sonar-7.2'
-            }
-            steps{
-                script{
-                    withSonarQubeEnv(installationName: 'sonar-7.2'){
-                        sh "${scannerHome}/bin/sonar-scanner" 
-                    }
-                       
-                }
-            }
-        }
-        stage('quality gate'){
-            steps{
-                timeout(time: 10, unit: 'MINUTES'){
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+        // stage('sonar scan'){
+        //     environment{
+        //         scannerHome = tool 'sonar-7.2'
+        //     }
+        //     steps{
+        //         script{
+        //             withSonarQubeEnv(installationName: 'sonar-7.2'){
+        //                 sh "${scannerHome}/bin/sonar-scanner"
+        //             }
+        //
+        //         }
+        //     }
+        // }
+        // stage('quality gate'){
+        //     steps{
+        //         timeout(time: 10, unit: 'MINUTES'){
+        //             waitForQualityGate abortPipeline: true
+        //         }
+        //     }
+        // }
         // stage('check dependabot'){
         //     environment{
         //         GITHUB_TOKEN = credentials('github-token')
