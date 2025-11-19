@@ -89,22 +89,32 @@ pipeline {
         // }
 
 
-        stage('Docker Build') {
-            steps {
-                script {
-                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
-                        sh """
-                            aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com
-                            export DOCKER_BUILDKIT=0
-                            export DOCKER_DEFAULT_PLATFORM=linux/amd64
-                            docker build -t ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
-                            docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
-                            #aws ecr wait image-scan-complete --repository-name ${PROJECT}/${COMPONENT} --image-id imageTag=${appVersion} --region ${REGION}
-                        """
+            stage('Docker Build') {
+                steps {
+                    script {
+                        withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+
+                            sh """
+                                aws ecr get-login-password --region ${REGION} \
+                                    | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com
+
+                                # Ensure NO multi-arch builder exists
+                                docker buildx rm mybuilder || true
+
+                                # Disable BuildKit to avoid manifest creation
+                                export DOCKER_BUILDKIT=0
+
+                                # Build a SINGLE amd64 image
+                                docker build --platform=linux/amd64 \
+                                    -t ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
+
+                                # Push the single image (NO image index)
+                                docker push ${ACC_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+                            """
+                        }
                     }
                 }
             }
-        }
 
         // stage('Check Scan Results') {
         //     steps {
