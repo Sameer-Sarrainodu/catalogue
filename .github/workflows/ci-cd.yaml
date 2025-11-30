@@ -1,0 +1,14 @@
+name: cicd
+on:
+  workflow_dispatch:
+jobs:
+  common:
+    uses: Sameer-Sarrainodu/reusable-workflows/.github/workflows/common.yaml
+    with:
+      project: roboshop
+      component: catalogue
+      app_type: nodejs
+      acc_id: "968220652823"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
