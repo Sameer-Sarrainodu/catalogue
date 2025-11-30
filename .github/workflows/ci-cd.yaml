@@ -1,5 +1,6 @@
 name: cicd
 on:
+  push:
   workflow_dispatch:
 jobs:
   common:
